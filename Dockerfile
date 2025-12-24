@@ -14,11 +14,10 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # Claude Code
 RUN npm install -g @anthropic-ai/claude-code
 
-# Create non-root user
-RUN groupadd -g 1000 claude && \
-    useradd -u 1000 -g claude -m -s /bin/bash claude && \
+# Create non-root user (reuse existing node group with GID 1000)
+RUN useradd -u 1000 -g node -m -s /bin/bash claude && \
     mkdir -p /home/claude/.claude && \
-    chown -R claude:claude /home/claude
+    chown -R claude:node /home/claude
 
 WORKDIR /app
 COPY package.json ./
