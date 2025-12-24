@@ -25,10 +25,10 @@ RUN npm install
 COPY src ./src
 
 # Give claude user ownership of app
-RUN chown -R claude:claude /app
+RUN chown -R claude:node /app
 
 # Create work directory
-RUN mkdir -p /tmp/work && chown -R claude:claude /tmp/work
+RUN mkdir -p /tmp/work && chown -R claude:node /tmp/work
 
 # Switch to non-root user
 USER claude
