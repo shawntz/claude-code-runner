@@ -14,26 +14,25 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # Claude Code
 RUN npm install -g @anthropic-ai/claude-code
 
-# Create non-root user (reuse existing node group with GID 1000)
-RUN useradd -u 1000 -g node -m -s /bin/bash claude && \
-    mkdir -p /home/claude/.claude && \
-    chown -R claude:node /home/claude
+# Set up node user's home for Claude CLI credentials
+RUN mkdir -p /home/node/.claude && \
+    chown -R node:node /home/node/.claude
 
 WORKDIR /app
 COPY package.json ./
 RUN npm install
 COPY src ./src
 
-# Give claude user ownership of app
-RUN chown -R claude:node /app
+# Give node user ownership of app
+RUN chown -R node:node /app
 
 # Create work directory
-RUN mkdir -p /tmp/work && chown -R claude:node /tmp/work
+RUN mkdir -p /tmp/work && chown -R node:node /tmp/work
 
 # Switch to non-root user
-USER claude
+USER node
 
-# Git config for commits (as claude user)
+# Git config for commits (as node user)
 RUN git config --global user.email "claude-bot@localhost" \
     && git config --global user.name "Claude Bot"
 
