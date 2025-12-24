@@ -1,6 +1,7 @@
 services:
   claude-runner:
-    build: .
+    image: ericvtheg/claude-code-runner:0c10e35
+    container_name: claude-runner
     ports:
       - "7334:3000"
     environment:
@@ -14,3 +15,4 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s

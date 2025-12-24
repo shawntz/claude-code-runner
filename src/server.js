@@ -1,9 +1,13 @@
 import express from 'express';
 import { spawn } from 'child_process';
 import { randomUUID } from 'crypto';
-import { mkdir, rm, appendFile } from 'fs/promises';
+import { mkdir, rm, appendFile, readFile } from 'fs/promises';
 import { createWriteStream, createReadStream } from 'fs';
+import { fileURLToPath } from 'url';
 import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -155,6 +159,23 @@ app.get('/health', (req, res) => {
     tasks: tasks.size,
     running: [...tasks.values()].filter(t => t.status === 'running').length
   });
+});
+
+// List all tasks
+app.get('/tasks', (req, res) => {
+  const taskList = [...tasks.entries()].map(([id, task]) => ({
+    id,
+    ...task
+  }));
+  taskList.sort((a, b) => new Date(b.started) - new Date(a.started));
+  res.json(taskList);
+});
+
+// Dashboard UI
+app.get('/', async (req, res) => {
+  const html = await readFile(path.join(__dirname, 'dashboard.html'), 'utf-8');
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
 });
 
 async function runOrchestrator(id, prompt, taskDir) {
