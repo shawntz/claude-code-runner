@@ -4,6 +4,9 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     ssh \
+    python3 \
+    make \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 # gh CLI

@@ -1,5 +1,5 @@
 import express from 'express';
-import { spawn } from 'child_process';
+import pty from 'node-pty';
 import { randomUUID } from 'crypto';
 import { mkdir, rm, appendFile, readFile } from 'fs/promises';
 import { createWriteStream, createReadStream } from 'fs';
@@ -190,19 +190,22 @@ async function runOrchestrator(id, prompt, taskDir) {
   await appendFile(logFile, `Prompt: ${prompt}\n\n`);
 
   return new Promise((resolve, reject) => {
-    const proc = spawn('claude', [
+    const proc = pty.spawn('claude', [
       '-p', fullPrompt,
+      '--print',
       '--dangerously-skip-permissions'
     ], {
       cwd: taskDir,
       env: {
         ...process.env,
         GH_TOKEN: process.env.GITHUB_TOKEN
-      }
+      },
+      cols: 200,
+      rows: 50
     });
 
     const timeout = setTimeout(() => {
-      proc.kill('SIGTERM');
+      proc.kill();
       const err = new Error('Task timed out after 1 hour');
       err.errorType = 'timeout';
       reject(err);
@@ -210,17 +213,12 @@ async function runOrchestrator(id, prompt, taskDir) {
 
     let output = '';
 
-    proc.stdout.on('data', d => {
-      output += d;
-      logStream.write(d);
+    proc.onData(data => {
+      output += data;
+      logStream.write(data);
     });
 
-    proc.stderr.on('data', d => {
-      output += d;
-      logStream.write(d);
-    });
-
-    proc.on('close', async code => {
+    proc.onExit(async ({ exitCode }) => {
       clearTimeout(timeout);
       logStream.end();
 
@@ -246,19 +244,19 @@ async function runOrchestrator(id, prompt, taskDir) {
       const task = tasks.get(id);
       tasks.set(id, {
         ...task,
-        status: code === 0 ? 'completed' : 'failed',
+        status: exitCode === 0 ? 'completed' : 'failed',
         pr_url: prMatch?.[0] || null,
-        errorType: code === 0 ? null : 'exit_code',
+        errorType: exitCode === 0 ? null : 'exit_code',
         finished: new Date().toISOString()
       });
 
       // Cleanup cloned repo on success (keep logs)
-      if (code === 0) {
+      if (exitCode === 0) {
         const repoDir = path.join(taskDir, 'repo');
         await rm(repoDir, { recursive: true, force: true }).catch(() => {});
       }
 
-      code === 0 ? resolve() : reject(new Error(`Exit code ${code}`));
+      exitCode === 0 ? resolve() : reject(new Error(`Exit code ${exitCode}`));
     });
   });
 }
