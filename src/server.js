@@ -94,7 +94,7 @@ PR_URL: https://github.com/...
 // Error detection patterns
 const ERROR_PATTERNS = {
   authExpired: /authenticate|login required|unauthorized|OAuth|session expired/i,
-  capacityReached: /capacity|rate limit|too many requests|throttl|quota|overloaded|529|503/i
+  capacityReached: /capacity|rate limit|too many requests|throttl|quota|overloaded|\b529\b|\b503\b/i
 };
 
 function detectError(output) {
