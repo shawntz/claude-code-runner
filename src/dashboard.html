@@ -144,9 +144,20 @@
       overflow: auto;
       font-family: monospace;
       font-size: 13px;
-      white-space: pre-wrap;
-      word-break: break-all;
     }
+    .log-entry { margin-bottom: 12px; padding: 8px; border-radius: 4px; }
+    .log-entry.system { background: #1f2937; border-left: 3px solid #6b7280; }
+    .log-entry.assistant { background: #1e3a5f; border-left: 3px solid #58a6ff; }
+    .log-entry.user { background: #2d1f3d; border-left: 3px solid #a855f7; }
+    .log-entry.result { background: #1a2e1a; border-left: 3px solid #3fb950; }
+    .log-entry.result.error { background: #2e1a1a; border-left: 3px solid #f85149; }
+    .log-entry.phase { background: #3d2f1a; border-left: 3px solid #f0883e; font-weight: bold; }
+    .log-entry.raw { background: #21262d; white-space: pre-wrap; word-break: break-all; }
+    .log-type { font-size: 10px; text-transform: uppercase; color: #8b949e; margin-bottom: 4px; }
+    .log-tool { color: #f0883e; font-weight: 600; }
+    .log-text { white-space: pre-wrap; word-break: break-word; }
+    .log-meta { font-size: 11px; color: #6b7280; margin-top: 6px; }
+    .log-cost { color: #3fb950; }
     .refresh-note { color: #8b949e; font-size: 12px; margin-left: auto; }
     .empty { color: #8b949e; text-align: center; padding: 40px; }
   </style>
@@ -275,18 +286,100 @@
       }
     }
 
+    function formatLogEntry(line) {
+      // Phase headers
+      if (line.startsWith('===')) {
+        return `<div class="log-entry phase">${escapeHtml(line)}</div>`;
+      }
+
+      // Plain text lines (task info)
+      if (!line.startsWith('{')) {
+        if (line.trim()) {
+          return `<div class="log-entry raw">${escapeHtml(line)}</div>`;
+        }
+        return '';
+      }
+
+      try {
+        const data = JSON.parse(line);
+
+        if (data.type === 'system' && data.subtype === 'init') {
+          return `<div class="log-entry system">
+            <div class="log-type">System Init</div>
+            <div class="log-text">Model: ${data.model || 'unknown'}</div>
+            <div class="log-meta">Tools: ${(data.tools || []).length} | MCP: ${(data.mcp_servers || []).length} servers</div>
+          </div>`;
+        }
+
+        if (data.type === 'assistant') {
+          const content = data.message?.content || [];
+          let html = '<div class="log-entry assistant"><div class="log-type">Assistant</div>';
+
+          for (const block of content) {
+            if (block.type === 'text') {
+              html += `<div class="log-text">${escapeHtml(block.text)}</div>`;
+            } else if (block.type === 'tool_use') {
+              const input = block.input || {};
+              const desc = input.description || input.command || input.pattern || input.file_path || '';
+              html += `<div class="log-text"><span class="log-tool">${block.name}</span> ${escapeHtml(String(desc).slice(0, 100))}</div>`;
+            }
+          }
+          html += '</div>';
+          return html;
+        }
+
+        if (data.type === 'user') {
+          const content = data.message?.content || [];
+          let html = '<div class="log-entry user"><div class="log-type">Tool Result</div>';
+
+          for (const block of content) {
+            if (block.type === 'tool_result') {
+              const result = block.content || '';
+              const preview = String(result).slice(0, 300);
+              html += `<div class="log-text">${escapeHtml(preview)}${result.length > 300 ? '...' : ''}</div>`;
+            }
+          }
+          html += '</div>';
+          return html;
+        }
+
+        if (data.type === 'result') {
+          const isError = data.is_error || data.subtype === 'error';
+          return `<div class="log-entry result ${isError ? 'error' : ''}">
+            <div class="log-type">${isError ? 'Error' : 'Complete'}</div>
+            <div class="log-text">${escapeHtml(String(data.result || '').slice(0, 500))}</div>
+            <div class="log-meta">Duration: ${Math.round((data.duration_ms || 0) / 1000)}s | <span class="log-cost">Cost: $${(data.total_cost_usd || 0).toFixed(4)}</span></div>
+          </div>`;
+        }
+
+        // Fallback for unknown types
+        return `<div class="log-entry raw">${escapeHtml(line.slice(0, 200))}...</div>`;
+      } catch (e) {
+        return `<div class="log-entry raw">${escapeHtml(line)}</div>`;
+      }
+    }
+
     async function fetchLogs(id) {
       try {
         const res = await fetch('/task/' + id + '/logs');
         const text = await res.text();
         const content = document.getElementById('log-content');
         const wasAtBottom = content.scrollHeight - content.scrollTop <= content.clientHeight + 50;
-        content.textContent = text || '(no logs yet)';
+
+        if (!text) {
+          content.innerHTML = '<div class="log-entry raw">(no logs yet)</div>';
+          return;
+        }
+
+        const lines = text.split('\n').filter(l => l.trim());
+        const formatted = lines.map(formatLogEntry).join('');
+        content.innerHTML = formatted;
+
         if (wasAtBottom) {
           content.scrollTop = content.scrollHeight;
         }
       } catch (e) {
-        document.getElementById('log-content').textContent = 'Error loading logs: ' + e.message;
+        document.getElementById('log-content').innerHTML = '<div class="log-entry result error">Error loading logs: ' + escapeHtml(e.message) + '</div>';
       }
     }
 
