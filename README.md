@@ -1,6 +1,6 @@
 # Claude Code Runner
 
-Self hostable Claude Code runner to execute prompts from anywhere. Container accepts task prompts via HTTP and spawns Claude Code instance to autonomously implement them. Makes use of your Claude Code subscription instead of requiring an API key.
+Self hostable Claude Code runner to execute prompts from anywhere. Container accepts task prompts via HTTP and spawns Claude Code instance to autonomously implement them. Includes an integrated dashboard to submit tasks and monitor progress. Makes use of your Claude Code subscription instead of requiring an API key.
 
 ## How it Works
 
