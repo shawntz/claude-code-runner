@@ -2,6 +2,10 @@
 
 Self hostable Claude Code runner to execute prompts from anywhere. Container accepts task prompts via HTTP and spawns Claude Code instance to autonomously implement them. Includes an integrated dashboard to submit tasks and monitor progress. Makes use of your Claude Code subscription instead of requiring an API key.
 
+## Security
+
+This service has no built-in authentication. It is expected to be hosted behind a VPN or private network that only you have access to. Do not expose to the public internet.
+
 ## How it Works
 
 Claude Code uses your authenticated session from your OS (no API key). Claude Code will use your provided Github token to find your relevant repository, clone it, make requested changes based on your prompt, then open a PR. 
@@ -98,7 +102,3 @@ claude
 ```
 
 This creates credentials at `~/.claude/` which get mounted into the container via the volume mount (`~/.claude:/home/node/.claude`). The container will use your subscription for all Claude API calls.
-
-## Security
-
-This service has no built-in authentication. It is expected to be hosted behind a VPN or private network that only you have access to. Do not expose to the public internet.
