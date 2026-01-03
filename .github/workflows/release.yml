@@ -76,4 +76,3 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ needs.release.outputs.new_release_version }}
-            ${{ env.IMAGE_NAME }}:latest

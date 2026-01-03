@@ -90,6 +90,13 @@ curl http://localhost:7334/task/<id>/logs
 curl http://localhost:7334/health
 ```
 
+## Docker Image Tags
+
+The project publishes Docker images to Docker Hub with the following tagging strategy:
+
+- **Version tags** (e.g., `1.4.1`): Internal release images created automatically on every push to `main` that triggers a semantic release. Use these for testing new features before they're promoted to latest.
+- **`latest` tag**: Stable release promoted manually via GitHub Actions. This is the recommended tag for production use.
+
 ## Requirements
 
 - `GITHUB_TOKEN` with repo scope
