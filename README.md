@@ -1,5 +1,10 @@
 # Claude Code Runner
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/ericvtheg/claude-code-runner)](https://hub.docker.com/r/ericvtheg/claude-code-runner)
+[![Docker Image Size](https://img.shields.io/docker/image-size/ericvtheg/claude-code-runner/latest)](https://hub.docker.com/r/ericvtheg/claude-code-runner)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ericvtheg/claude-code-runner)](https://github.com/ericvtheg/claude-code-runner)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Self hostable Claude Code runner to execute prompts from anywhere. Container accepts task prompts via HTTP and spawns Claude Code instance to autonomously implement them. Includes an integrated dashboard to submit tasks and monitor progress. Makes use of your Claude Code subscription instead of requiring an API key.
 
 ## Security
