@@ -19,7 +19,7 @@ This service includes username/password authentication. On first visit, you'll b
 
 Credentials are stored in a JSON file (default: `/data/auth.json`) with bcrypt-hashed passwords. Mount a persistent volume to preserve credentials across container restarts.
 
-> **Note:** While authentication protects the dashboard, it's still recommended to host behind a VPN or private network for defense in depth.
+> **Note:** While authentication protects the dashboard, it's HIGHLY recommended to host behind a VPN or private network for security.
 
 ## How it Works
 
